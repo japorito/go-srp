@@ -1,4 +1,4 @@
-GO-SRP
-==========
+go-srp
+======
 
-This project aims to be an implementation of the SRP Authentication protocol version 6 written as a Go package. Currently a work in progress.
+This project aims to be a Go implementation of the SRP Authentication Protocol v6.
