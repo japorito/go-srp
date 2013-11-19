@@ -2,10 +2,9 @@ package srpserver
 
 import (
     "crypto/rand"
-    "crypto/sha256"
-    "code.google.com/p/go.crypto/pbkdf2"
     "fmt"
     "io"
+    "srp"
 )
 
 type Verifier struct {
@@ -19,12 +18,6 @@ type ErrShortSalt struct {
 
 func (e ErrShortSalt) Error() string {
      return fmt.Sprintf("Salt is too short. Expected length %d, got length %d.", e.slen, e.n)
-}
-
-func kdf(to_hash, salt []byte) []byte {
-    dk := pbkdf2.Key(to_hash, salt, 4096, 32, sha256.New)     
-
-    return dk
 }
 
 func CreateVerifier(p string, slen int) (Verifier, error) {
