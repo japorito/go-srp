@@ -2,7 +2,6 @@ package srpserver
 
 import (
     "crypto/sha1"
-    "fmt"
     "math/big"
     "testing"
 )
@@ -32,7 +31,7 @@ func h(to_hash, salt []byte) []byte {
 
 // Tests v.Create() with a simple hash function and a given salt
 // checks output with test vector from appendix of RFC 5054
-func TestCreateVerifier(t *testing.T) {
+func TestCreate(t *testing.T) {
     _, err := v.Create("alice:password123", 32, h, sgen)
     if err == nil {
        t.Logf("Verifier is %X.\nSalt is %X.\n", v.V, v.S)
@@ -40,20 +39,33 @@ func TestCreateVerifier(t *testing.T) {
        t.Error("Error: ", err)
     }
 
-    var correctv, corrects []byte
-    fmt.Sscanf("7E273DE8696FFC4F4E337D05B4B375BEB0DDE1569E8FA00A9886D8129BADA1F1822223CA1A605B530E379BA4729FDC59F105B4787E5186F5C671085A1447B52A48CF1970B4FB6F8400BBF4CEBFBB168152E08AB5EA53D15C1AFF87B2B9DA6E04E058AD51CC72BFC9033B564E26480D78E955A5E29E7AB245DB2BE315E2099AFB", "%X", correctv)
-    fmt.Sscanf("BEB25379D1A8581EB5A727673A2441EE", "%X", corrects)
+    var correctv, corrects big.Int
+    correctv.SetString("7E273DE8696FFC4F4E337D05B4B375BEB0DDE1569E8FA00A9886D8129BADA1F1822223CA1A605B530E379BA4729FDC59F105B4787E5186F5C671085A1447B52A48CF1970B4FB6F8400BBF4CEBFBB168152E08AB5EA53D15C1AFF87B2B9DA6E04E058AD51CC72BFC9033B564E26480D78E955A5E29E7AB245DB2BE315E2099AFB", 16)
+    corrects.SetString("BEB25379D1A8581EB5A727673A2441EE", 16)
     
-    for i := range corrects {
-        if v.S[i] != corrects[i] {
-            t.Error("Error: recieved incorrect salt.")
+    var fail bool = false
+
+    salt := corrects.Bytes()
+    for i := range salt {
+        if v.S[i] != salt[i] {
+	    fail = true
         }
     } 
 
-    for i := range correctv {
-        if v.V[i] != correctv[i] {
-            t.Errorf("Error: Incorrect verifier.\nExpected: %X\nGot: %X", correctv, v.V)
+    if fail {
+        t.Error("Error: recieved incorrect salt.")
+	fail = false
+    }
+
+    verifier := correctv.Bytes()
+    for i := range verifier {
+        if v.V[i] != verifier[i] {
+	    fail = true
         }
+    }
+
+    if fail {
+        t.Errorf("Error: Incorrect verifier.\nExpected: %X\nGot: %X", correctv, v.V)
     }
 }
 
