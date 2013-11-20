@@ -18,12 +18,15 @@ func (e ErrNoPrimeAvailable) Error() string {
     return fmt.Sprintf("No standard %v-bit prime defined by this package!", e)
 }
 
+//example hash function
 func H(to_hash, salt []byte) []byte {
     dk := pbkdf2.Key(to_hash, salt, 4096, 32, sha256.New)     
 
     return dk
 }
 
+// Takes the size in bits of the desired prime number, and returns
+// an SRPGroupParameters object with the prime and the generator.
 func GetGroupParameters(Nsize int) (SRPGroupParameters, error) {
     var prime big.Int
 
