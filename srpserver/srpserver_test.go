@@ -65,7 +65,7 @@ func TestCreate(t *testing.T) {
     }
 
     if fail {
-        t.Errorf("Error: Incorrect verifier.\nExpected: %X\nGot: %X", correctv, v.V)
+        t.Errorf("Error: Incorrect verifier.\nExpected: %X\nGot: %X", verifier, v.V)
     }
 }
 
