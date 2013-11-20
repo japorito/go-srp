@@ -1,5 +1,0 @@
-package srpserver
-
-func TestCreateVerifier() {
-
-}
