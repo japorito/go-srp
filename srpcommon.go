@@ -2,7 +2,7 @@ package srp
 
 import (
     "code.google.com/p/go.crypto/pbkdf2"
-    "crypto/sha256"
+    "crypto/sha512"
     "fmt"
     "math/big"
 )
@@ -20,7 +20,7 @@ func (e ErrNoPrimeAvailable) Error() string {
 
 //example hash function
 func H(to_hash, salt []byte) []byte {
-    dk := pbkdf2.Key(to_hash, salt, 4096, 32, sha256.New)     
+    dk := pbkdf2.Key(to_hash, salt, 10000, 128, sha512.New)     
 
     return dk
 }

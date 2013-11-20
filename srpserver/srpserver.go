@@ -25,9 +25,25 @@ func (e ErrShortSalt) Error() string {
      return fmt.Sprintf("Generated salt is was shorter than requested. Expected length %d, got length %d.", e.slen, e.n)
 }
 
+// Creates an entirely random salt of length slen.
+// For use with Create, if you only need to specify a hash function.
+func RandomSalt(slen int) ([]byte, error) {
+    salt := make([]byte, slen)
+    n, err := io.ReadFull(rand.Reader, salt)
+
+    //check for errors, make sure salt is of the desired length.
+    if err != nil {
+        return salt, err
+    } else if n < slen {
+        return salt, ErrShortSalt{n, slen}
+    }
+
+    return salt, nil
+}
+
 //Initializes new verifier by picking a salt of the desired length slen, and running
 //the Hash function H which is passed to it.
-func (v *Verifier) CreateVerifier(p string, slen int, H func([]byte, []byte) []byte, SGen func(int) ([]byte, error)) (*Verifier, error) {
+func (v *Verifier) Create(p string, slen int, H func([]byte, []byte) []byte, SGen func(int) ([]byte, error)) (*Verifier, error) {
     // Create a SRP verifier, given a password p, and the length of the desired salt,
     // a hash function, and a salt generating function. This is the DIY version of
     // Verifier.New()
@@ -63,18 +79,6 @@ func (v *Verifier) CreateVerifier(p string, slen int, H func([]byte, []byte) []b
     return v, nil
 }
 
-// Creates an entirely random salt of length slen.
-// For use with CreateVerifier, if you only need to specify a hash function.
-func RandomSalt(slen int) ([]byte, error) {
-    salt := make([]byte, slen)
-    n, err := io.ReadFull(rand.Reader, salt)
-
-    //check for errors, make sure salt is of the desired length.
-    if err != nil {
-        return salt, err
-    } else if n < slen {
-        return salt, ErrShortSalt{n, slen}
-    }
-
-    return salt, nil
+func (v *Verifier) New(p string) (*Verifier, error) {
+     return v.Create(p, 32, srp.H, RandomSalt)
 }

@@ -30,10 +30,10 @@ func h(to_hash, salt []byte) []byte {
     return outerhash.Sum(hash)
 }
 
-// Tests CreateVerifier with a simple hash function and a given salt
+// Tests v.Create() with a simple hash function and a given salt
 // checks output with test vector from appendix of RFC 5054
 func TestCreateVerifier(t *testing.T) {
-    _, err := v.CreateVerifier("alice:password123", 32, h, sgen)
+    _, err := v.Create("alice:password123", 32, h, sgen)
     if err == nil {
        t.Logf("Verifier is %X.\nSalt is %X.\n", v.V, v.S)
     } else {
@@ -64,4 +64,19 @@ func TestRandomSalt(t *testing.T) {
     if err != nil {
         t.Error(err)
     }
+}
+
+func TestNew(t *testing.T) {
+     _, err := v.New("password")
+     if err != nil {
+         t.Error(err)
+     } else if len(v.S) < 32 {
+         t.Error(ErrShortSalt{len(v.S), 32})
+     } else if len(v.V) == 0 {
+         t.Error("Error: empty verifier returned.")
+     }
+
+     t.Log("Verifier successfully created via v.New()")
+     t.Log("Salt: ", v.S)
+     t.Log("Verifier: ", v.V)
 }
