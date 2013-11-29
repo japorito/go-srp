@@ -28,6 +28,33 @@ func H(to_hash, salt []byte) big.Int {
     return x
 }
 
+// Creates an entirely random salt of length slen.
+// For use with Create, if you only need to specify a hash function.
+func RandomBytes(slen uint) (big.Int, error) {
+	s := make([]byte, slen)
+	n, err := io.ReadFull(rand.Reader, s)
+	var salt big.Int
+	salt.SetBytes(s)
+	
+	//check for errors, make sure salt is of the desired length.
+	if err != nil {
+		return salt, err
+	} else if uint(n) < slen {
+		return salt, ErrorShortBytes{n, slen}
+	}
+
+	return salt, nil
+}
+
+type ErrorShortBytes struct {
+	n    int
+	slen uint
+}
+
+func (e ErrorShortBytes) Error() string {
+	return fmt.Sprintf("Generated salt is was shorter than requested. Expected length %d, got length %d.", e.slen, e.n)
+}
+
 // Takes the size in bits of the desired prime number, and returns
 // an SRPGroupParameters object with the prime and the generator.
 func GetGroupParameters(Nsize int) (SRPGroupParameters, error) {

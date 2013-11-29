@@ -142,7 +142,7 @@ func TestStandardHashSalt(t *testing.T) {
 	        t.Error("Error: ", err)
 	}
 
-        SrpServer(testgp, srp.H, RandomBytes)
+        SrpServer(testgp, srp.H, srp.RandomBytes)
 	_, err = tmpv.New("username", "password", 32)
 	if err != nil {
 		t.Error(err)
@@ -157,7 +157,6 @@ func TestStandardHashSalt(t *testing.T) {
 	t.Log("Verifier successfully created via v.New()")
 	t.Logf("Salt: %X", tmpv.Salt.Bytes())
 	t.Logf("Verifier: %X", tmpv.Verifier.Bytes())
-	t.Logf("littleb: %X", Debug.Bytes())
 }
 
 func TestChallengeResponse(t *testing.T) {
