@@ -2,7 +2,7 @@ package srpserver
 
 import (
 	"crypto/sha1"
-	"github.com/japorito/go-srp"
+	"github.com/japorito/libgosrp"
 	"math/big"
 	"testing"
 )

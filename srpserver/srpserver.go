@@ -152,6 +152,7 @@ type challenge_response struct {
 // sent from the server to the client.
 func (cr *challenge_response) new(v Verifier, sess *SRPSession) (*challenge_response, error) {
 	var B big.Int
+	var err error
 	Ng := make([]byte, len(gp.N.Bytes())+len(gp.G.Bytes())) 
 	// make the buffer big enough for N and g
 
@@ -164,7 +165,7 @@ func (cr *challenge_response) new(v Verifier, sess *SRPSession) (*challenge_resp
 	cr.Salt = fmt.Sprintf("%X", v.Salt.Bytes())
 
 	//generate random b
-	sess.b, err := RandomBytes(64)
+	sess.b, err = RandomBytes(64)
 
 	//check for errors, make sure salt is of the desired length.
 	if err != nil {
