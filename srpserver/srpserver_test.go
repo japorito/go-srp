@@ -122,18 +122,6 @@ func TestSimpleHashSalt(t *testing.T) {
 	}
 }
 
-// Runs RandomBytes. Errors if err is non-nil
-func TestRandomBytes(t *testing.T) {
-	n, err := RandomBytes(64)
-	if err != nil {
-		t.Error(err)
-	} else if len(n.Bytes()) != 64 {
-	        t.Error("Error: RandomBytes gave an incorrect length.")
-	}
-	
-	t.Logf("Salt: %X", n.Bytes())
-}
-
 func TestStandardHashSalt(t *testing.T) {
         var tmpv Verifier
         testgp, err := srp.GetGroupParameters(4096)
@@ -146,8 +134,6 @@ func TestStandardHashSalt(t *testing.T) {
 	_, err = tmpv.New("username", "password", 32)
 	if err != nil {
 		t.Error(err)
-	} else if len(tmpv.Salt.Bytes()) != 32 {
-		t.Error(ErrorShortSalt{len(tmpv.Salt.Bytes()), 32})
 	} else if len(tmpv.Verifier.Bytes()) == 0 {
 		t.Error("Error: empty verifier returned.")
 	} else if tmpv.I != "username" {

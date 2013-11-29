@@ -2,6 +2,7 @@ package srpserver
 
 import (
        "fmt"
+       "github.com/japorito/libgosrp"
        "math/big"
 )
 
@@ -27,7 +28,7 @@ func (cr *challenge_response) new(v Verifier, sess *SRPSession) (*challenge_resp
 	cr.Salt = fmt.Sprintf("%X", v.Salt.Bytes())
 
 	//generate random b
-	sess.b, err = RandomBytes(64)
+	sess.b, err = srp.RandomBytes(64)
 
 	//check for errors, make sure salt is of the desired length.
 	if err != nil {
@@ -36,7 +37,7 @@ func (cr *challenge_response) new(v Verifier, sess *SRPSession) (*challenge_resp
 
 	//calculate B = kv+g^b
 	B.Exp(&gp.G, &sess.b, &gp.N)
-	B.Add(&B, &kv)
+	B.Add(&kv, &B)
 
 	//store B for later calculations.
 	sess.bigb = B

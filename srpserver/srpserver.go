@@ -5,10 +5,8 @@
 package srpserver
 
 import (
-	"crypto/rand"
 	"fmt"
 	"github.com/japorito/libgosrp"
-	"io"
 	"math/big"
 )
 

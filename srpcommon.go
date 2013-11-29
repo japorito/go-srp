@@ -3,7 +3,9 @@ package srp
 import (
     "code.google.com/p/go.crypto/pbkdf2"
     "crypto/sha512"
+    "crypto/rand"
     "fmt"
+    "io"
     "math/big"
 )
 
