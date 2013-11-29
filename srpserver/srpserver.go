@@ -164,8 +164,7 @@ func (msb *challenge_response) new(v Verifier, sess *SRPSession) (*challenge_res
 	msb.Salt = fmt.Sprintf("%X", v.Salt.Bytes())
 
 	//generate random b
-	Debug, err := RandomBytes(64)
-	sess.b = Debug
+	sess.b, err := RandomBytes(64)
 
 	//check for errors, make sure salt is of the desired length.
 	if err != nil {
