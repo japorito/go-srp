@@ -1,7 +1,7 @@
-package srpserver
+package libgosrp
 
 import (
-       "math/big"
+	"math/big"
 )
 
 type Verifier struct {
@@ -37,4 +37,3 @@ func (v *Verifier) New(user, p string, slen uint) (*Verifier, error) {
 
 	return v, nil
 }
-
