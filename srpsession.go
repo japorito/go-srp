@@ -24,7 +24,27 @@ func (s *SRPSession) ReadChallenge(jsonIA string) error {
 	return err
 }
 
-func (s *SRPSession) ChallengeResponse(v Verifier) (string, error) {
+func (s *SRPSession) New(v Verifier) error {
+	err := check_init()
+	if err != nil {
+		return err
+	}
+
+	s.b, err = bgen(64)
+	if err != nil {
+		return err
+	}
+
+	//Initialize SRPSession fields.
+	//s.I should be set in ReadChallenge
+	s.s = v.Salt
+	s.v = v.Verifier
+	s.bigb = calculate_b(s.b)
+
+	return nil
+}
+
+func (s *SRPSession) ChallengeResponse() (string, error) {
 	err := check_init()
 	if err != nil {
 		return "", err
@@ -32,25 +52,9 @@ func (s *SRPSession) ChallengeResponse(v Verifier) (string, error) {
 
 	var cr ChallengeResponse
 
-	s.b, err = bgen(64)
-	if err != nil {
-		return "", err
-	}
-
-	//calculate B = kv+g^b
-	B := calulate_k()
-	B.Mul(&B, &v.Verifier)
-	B.Add(&B, new(big.Int).Exp(&gp.G, &s.b, &gp.N))
-
-	//store B for later calculations.
-	cr.Salt = fmt.Sprintf("%X", v.Salt.Bytes())
-	cr.B = fmt.Sprintf("%X", B.Bytes())
-
-	//Initialize SRPSession fields.
-	//s.I should be set in ReadChallenge
-	s.s = v.Salt
-	s.v = v.Verifier
-	s.bigb = B
+	//Populate message from server.
+	cr.Salt = fmt.Sprintf("%X", s.s.Bytes())
+	cr.B = fmt.Sprintf("%X", s.bigb.Bytes())
 
 	output, err := json.MarshalIndent(cr, "", "    ")
 
@@ -73,4 +77,13 @@ func calulate_k() big.Int {
 	k := h(Ng, make([]byte, 0))
 
 	return k
+}
+
+func calculate_b(b big.Int) big.Int {
+	//calculate B = kv+g^b
+	B := calulate_k()
+	B.Mul(&B, &v.Verifier)
+	B.Add(&B, new(big.Int).Exp(&gp.G, &s.b, &gp.N))
+
+	return B
 }

@@ -154,7 +154,13 @@ func TestChallengeResponse(t *testing.T) {
 
 	bgen = testbgen
 
-	cr, err := s.ChallengeResponse(v)
+	err = s.New(v)
+
+	if err != nil {
+		t.Error("Error: ", err)
+	}
+
+	cr, err := s.ChallengeResponse()
 
 	if err != nil {
 		t.Error("Error: ", err)
