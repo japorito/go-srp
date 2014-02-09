@@ -13,12 +13,14 @@ var gp SRPGroupParameters
 var h func([]byte, []byte) big.Int
 var sgen func(uint) (big.Int, error)
 var bgen func(uint) (big.Int, error)
+var pad_values bool
 
 func SrpServer(srpgp SRPGroupParameters, hash func([]byte, []byte) big.Int, salt_gen func(uint) (big.Int, error)) {
 	gp = srpgp
 	h = hash
 	sgen = salt_gen
 	bgen = RandomBytes
+	pad_values = true
 }
 
 func check_init() error {

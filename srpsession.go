@@ -9,7 +9,6 @@ import (
 type SRPSession struct {
 	i           string
 	s, v        big.Int
-	k           big.Int
 	b           big.Int
 	biga, bigb  big.Int
 	session_key big.Int
@@ -27,33 +26,21 @@ func (s *SRPSession) ReadChallenge(jsonIA string) error {
 
 func (s *SRPSession) ChallengeResponse(v Verifier) (string, error) {
 	err := check_init()
-
 	if err != nil {
 		return "", err
 	}
 
-	var B big.Int
 	var cr ChallengeResponse
-	Ng := make([]byte, 2*len(gp.N.Bytes()))//+len(gp.G.Bytes()))
-	// make the buffer big enough for N and g
 
-	//calculate kv
-	copy(Ng, gp.N.Bytes())
-	copy(Ng[len(gp.N.Bytes()):], Pad(len(gp.N.Bytes()), gp.G.Bytes()))
-	kv := h(Ng, make([]byte, 0))
-	kv.Mul(&kv, &v.Verifier)
-
-	//generate random b
 	s.b, err = bgen(64)
-
-	//check for errors, make sure salt is of the desired length.
 	if err != nil {
 		return "", err
 	}
 
 	//calculate B = kv+g^b
-	B.Exp(&gp.G, &s.b, &gp.N)
-	B.Add(&kv, &B)
+	B := calulate_k()
+	B.Mul(&B, &v.Verifier)
+	B.Add(&B, new(big.Int).Exp(&gp.G, &s.b, &gp.N))
 
 	//store B for later calculations.
 	cr.Salt = fmt.Sprintf("%X", v.Salt.Bytes())
@@ -72,4 +59,18 @@ func (s *SRPSession) ChallengeResponse(v Verifier) (string, error) {
 	}
 
 	return string(output), nil
+}
+
+func calulate_k() big.Int {
+	var Ng []byte
+
+	if pad_values {
+		Ng = append(gp.N.Bytes(), Pad(len(gp.N.Bytes()), gp.G.Bytes())...)
+	} else {
+		Ng = append(gp.N.Bytes(), gp.G.Bytes()...)
+	}
+
+	k := h(Ng, make([]byte, 0))
+
+	return k
 }

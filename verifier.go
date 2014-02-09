@@ -5,7 +5,7 @@ import (
 )
 
 type Verifier struct {
-	I        string
+	I        string  //Username
 	Salt     big.Int //salt
 	Verifier big.Int //verifier
 }

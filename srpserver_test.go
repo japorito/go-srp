@@ -25,7 +25,6 @@ func testbgen(slen uint) (big.Int, error) {
 
 // Implements the hash function described in RFC 5054
 // so that we can use their test vector to verify our code
-// Only used for verifier creation?
 func testh(to_hash, salt []byte) big.Int {
 	var hash []byte
 	var output big.Int
@@ -48,8 +47,9 @@ func sha1hash(to_hash, salt []byte) big.Int {
 
 	hash := sha1.New()
 	hash.Write(to_hash)
+	hash.Write(salt)
 	output.SetBytes(hash.Sum(make([]byte, 0)))
-	
+
 	return output
 }
 
@@ -135,6 +135,11 @@ func TestStandardHashSalt(t *testing.T) {
 	t.Logf("Verifier: %X", tmpv.Verifier.Bytes())
 }
 
+// NOT rfc 5054 compliant
+// They do some magic with their B. It is smaller
+// than k*v, and it is supposed to be
+// kv+g^b%N. I just implemented the actual
+// equation. Tests now diverge from rfc5054
 func TestChallengeResponse(t *testing.T) {
 	testgp, err := GetGroupParameters(1024)
 	var littleb, bigb big.Int
@@ -158,14 +163,14 @@ func TestChallengeResponse(t *testing.T) {
 	}
 
 	littleb.SetString("E487CB59D31AC550471E81F00F6928E01DDA08E974A004F49E61F5D105284D20", 16)
-	bigb.SetString("BD0C61512C692C0CB6D041FA01BB152D4916A1E77AF46AE105393011BAF38964DC46A0670DD125B95A981652236F99D9B681CBF87837EC996C6DA04453728610D0C6DDB58B318885D7D82C7F8DEB75CE7BD4FBAA37089E6F9C6059F388838E7A00030B331EB76840910440B1B27AAEAEEB4012B7D7665238A8E3FB004B117B58", 16)
+	// Not from rfc 5054
+	bigb.SetString("39D2A44238CC9017300647C9D9171B1468AE0A4D4538E4479B28E9307B57CCBAD240E26DF9651C381F02E54AC13A40A8193F8E77556FB8EEF83F7AF6DBAC7F5FFDF338649FF4B211BA88AE11AE0C99C44F921F2FA447E082395EE92709ED61A114F7FDF814440A40B509044CDD98C259613B281D73B3620DE8AEBAFF90604264FD2818C79B32EE1A53B9CEE98D74938F200E3DF8", 16)
 
 	if !bytes.Equal(littleb.Bytes(), s.b.Bytes()) {
 		t.Errorf("Error: littleb not properly set in test function. Possible problem in testbgen(). Expected: %X\nGot: %X", littleb.Bytes(), s.b.Bytes())
 	}
 
 	if !bytes.Equal(bigb.Bytes(), s.bigb.Bytes()) {
-		t.Errorf("Error: bigb incorrect. Expected: %X\nGot: %X", bigb.Bytes(), s.bigb.Bytes())
+		t.Errorf("Error: bigb incorrect. \nExpected: %X\nGot: %X", bigb.Bytes(), s.bigb.Bytes())
 	}
-	t.Logf("%X", s.k.Bytes())
 }
