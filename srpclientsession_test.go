@@ -32,4 +32,13 @@ func TestNewSession(t *testing.T) {
 	if !bytes.Equal(biga.Bytes(), sess.biga.Bytes()) {
 		t.Errorf("Public ephemeral value A incorrect.\n Expected: %X\n Got: %X", biga.Bytes(), sess.biga.Bytes())
 	}
+
+	if sess.i != "alice" {
+		t.Error("Username not correctly set.")
+	}
+
+	sess, err = new(SRPClientSession).New("", config)
+	if err == nil {
+		t.Error("Not properly reporting error on empty username.")
+	}
 }

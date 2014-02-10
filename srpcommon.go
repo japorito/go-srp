@@ -9,25 +9,6 @@ import (
 	"math/big"
 )
 
-type SRPGroupParameters struct {
-	N big.Int
-	G big.Int
-}
-
-func (gp *SRPGroupParameters) isEmpty() bool {
-	if len(gp.G.Bytes()) > 0 && len(gp.N.Bytes()) > 0 {
-		return false
-	}
-
-	return true
-}
-
-type ErrNoPrimeAvailable int
-
-func (e ErrNoPrimeAvailable) Error() string {
-	return fmt.Sprintf("No standard %v-bit prime defined by this package!", e)
-}
-
 //example hash function
 func H(to_hash, salt []byte) big.Int {
 	var x big.Int
@@ -63,6 +44,36 @@ type ErrorShortBytes struct {
 
 func (e ErrorShortBytes) Error() string {
 	return fmt.Sprintf("Generated salt is was shorter than requested. Expected length %d, got length %d.", e.slen, e.n)
+}
+
+func Pad(length int, src []byte) []byte {
+	if len(src) > length {
+		//error
+	} else {
+		dst := make([]byte, length)
+		copy(dst[length-len(src):], src)
+		return dst
+	}
+	return nil
+}
+
+type SRPGroupParameters struct {
+	N big.Int
+	G big.Int
+}
+
+func (gp *SRPGroupParameters) isEmpty() bool {
+	if len(gp.G.Bytes()) > 0 && len(gp.N.Bytes()) > 0 {
+		return false
+	}
+
+	return true
+}
+
+type ErrNoPrimeAvailable int
+
+func (e ErrNoPrimeAvailable) Error() string {
+	return fmt.Sprintf("No standard %v-bit prime defined by this package!", e)
 }
 
 // Takes the size in bits of the desired prime number, and returns
