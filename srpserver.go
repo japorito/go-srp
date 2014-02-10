@@ -9,24 +9,31 @@ import (
 	"math/big"
 )
 
-var gp SRPGroupParameters
-var h func([]byte, []byte) big.Int
-var sgen func(uint) (big.Int, error)
-var bgen func(uint) (big.Int, error)
-var pad_values bool
-
-func SrpServer(srpgp SRPGroupParameters, hash func([]byte, []byte) big.Int, salt_gen func(uint) (big.Int, error)) {
-	gp = srpgp
-	h = hash
-	sgen = salt_gen
-	bgen = RandomBytes
-	pad_values = true
+type SrpServer struct {
+	gp SRPGroupParameters
+	h func([]byte, []byte) big.Int
+	sgen func(uint) (big.Int, error)
+	bgen func(uint) (big.Int, error)
+	pad_values bool
 }
 
-func check_init() error {
-	if h == nil || sgen == nil || len(gp.G.Bytes()) == 0 || len(gp.N.Bytes()) == 0 {
-		var err ErrorUninitializedSrpServer
-		return err
+func (s *SrpServer) SrpServer(srpgp SRPGroupParameters, hash func([]byte, []byte) big.Int, salt_gen func(uint) (big.Int, error)) *SrpServer {
+	s.gp = srpgp
+	s.h = hash
+	s.sgen = salt_gen
+	s.bgen = RandomBytes
+	s.pad_values = true
+
+	return s
+}
+
+func (s *SrpServer) SetPad(value bool) {
+	s.pad_values = value
+}
+
+func (s *SrpServer) check_init() *ErrorUninitializedSrpServer {
+	if s.h == nil || s.sgen == nil || s.gp.isEmpty() {
+		return new(ErrorUninitializedSrpServer)
 	}
 
 	return nil

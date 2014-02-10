@@ -7,46 +7,47 @@ import (
 )
 
 type SRPSession struct {
-	i           string
-	s, v        big.Int
-	b           big.Int
-	biga, bigb  big.Int
+	// pointer to instance of server where
+	// the session is held
+	server      *SrpServer
+	i           string //username
+	s, v        big.Int //salt, verifier
+	b           big.Int //secret ephemeral value
+	biga, bigb  big.Int //public ephemeral value
 	session_key big.Int
 }
 
 func (s *SRPSession) ReadChallenge(jsonIA string) error {
-	err := check_init()
-
-	if err != nil {
+	if err := s.server.check_init(); err != nil {
 		return err
 	}
-
-	return err
-}
-
-func (s *SRPSession) New(v Verifier) error {
-	err := check_init()
-	if err != nil {
-		return err
-	}
-
-	s.b, err = bgen(64)
-	if err != nil {
-		return err
-	}
-
-	//Initialize SRPSession fields.
-	//s.I should be set in ReadChallenge
-	s.s = v.Salt
-	s.v = v.Verifier
-	s.bigb = calculate_b(s.b)
 
 	return nil
 }
 
-func (s *SRPSession) ChallengeResponse() (string, error) {
-	err := check_init()
+func (s *SRPSession) New(v Verifier, server *SrpServer) (*SRPSession, error) {
+	if err := server.check_init(); err != nil {
+		return new(SRPSession), err
+	}
+
+	var err error
+	s.b, err = server.bgen(64)
 	if err != nil {
+		return new(SRPSession), err
+	}
+
+	//Initialize SRPSession fields.
+	//s.I should be set in ReadChallenge
+	s.server = server
+	s.s = v.Salt
+	s.v = v.Verifier
+	s.bigb = s.calculate_bigb(s.b)
+
+	return s, nil
+}
+
+func (s *SRPSession) ChallengeResponse() (string, error) {
+	if err := s.server.check_init(); err != nil {
 		return "", err
 	}
 
@@ -57,7 +58,7 @@ func (s *SRPSession) ChallengeResponse() (string, error) {
 	cr.B = fmt.Sprintf("%X", s.bigb.Bytes())
 
 	output, err := json.MarshalIndent(cr, "", "    ")
-
+	
 	if err != nil {
 		return "", err
 	}
@@ -65,24 +66,27 @@ func (s *SRPSession) ChallengeResponse() (string, error) {
 	return string(output), nil
 }
 
-func calulate_k() big.Int {
+func (s *SRPSession) calulate_k() big.Int {
 	var Ng []byte
+	gp := s.server.gp
 
-	if pad_values {
+	if s.server.pad_values {
 		Ng = append(gp.N.Bytes(), Pad(len(gp.N.Bytes()), gp.G.Bytes())...)
 	} else {
 		Ng = append(gp.N.Bytes(), gp.G.Bytes()...)
 	}
 
-	k := h(Ng, make([]byte, 0))
+	k := s.server.h(Ng, make([]byte, 0))
 
 	return k
 }
 
-func calculate_b(b big.Int) big.Int {
+func (s *SRPSession) calculate_bigb(b big.Int) big.Int {
+	gp := s.server.gp
+
 	//calculate B = kv+g^b
-	B := calulate_k()
-	B.Mul(&B, &v.Verifier)
+	B := s.calulate_k()
+	B.Mul(&B, &s.v)
 	B.Add(&B, new(big.Int).Exp(&gp.G, &s.b, &gp.N))
 
 	return B

@@ -17,12 +17,12 @@ type Verifier struct {
 // preclude doing things like pbkdf2, which takes the password and salt and deals
 // with them separately. The function handed to this should be a wrapper function
 // that takes the password and salt as its 1st and 2nd argument respectively.
-func (v *Verifier) New(user, p string, slen uint) (*Verifier, error) {
+func (v *Verifier) New(user, p string, slen uint, server *SrpServer) (*Verifier, error) {
 	//Create random salt
 	var err error
 
 	v.I = user
-	v.Salt, err = sgen(slen)
+	v.Salt, err = server.sgen(slen)
 
 	//check for errors, make sure salt is of the desired length.
 	if err != nil {
@@ -30,10 +30,10 @@ func (v *Verifier) New(user, p string, slen uint) (*Verifier, error) {
 	}
 
 	//run hash function on password and salt
-	x := h([]byte(p), v.Salt.Bytes())
+	x := server.h([]byte(p), v.Salt.Bytes())
 
 	//create verifier v with hash and g (g**x % N)
-	v.Verifier.Exp(&gp.G, &x, &gp.N)
+	v.Verifier.Exp(&server.gp.G, &x, &server.gp.N)
 
 	return v, nil
 }

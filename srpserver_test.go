@@ -54,7 +54,7 @@ func sha1hash(to_hash, salt []byte) big.Int {
 }
 
 func TestCheckInit(t *testing.T) {
-	err := check_init()
+	err := new(SrpServer).check_init()
 
 	if err == nil {
 		t.Error("Error: failed to find uninitialized SrpServer.")
@@ -62,14 +62,14 @@ func TestCheckInit(t *testing.T) {
 		t.Log("check_init() correctly found uninitialized SrpServer.")
 	}
 
-	testgp, err := GetGroupParameters(1024)
+	testgp, gperr := GetGroupParameters(1024)
 
-	if err != nil {
+	if gperr != nil {
 		t.Error("Error: ", err)
 	}
 
-	SrpServer(testgp, testh, testgen)
-	err = check_init()
+	server := new(SrpServer).SrpServer(testgp, testh, testgen)
+	err = server.check_init()
 
 	if err != nil {
 		t.Error(err)
@@ -87,8 +87,8 @@ func TestSimpleHashSalt(t *testing.T) {
 		t.Error("Error: ", err)
 	}
 
-	SrpServer(testgp, testh, testgen)
-	_, err = v.New("alice", "alice:password123", 32)
+	server := new(SrpServer).SrpServer(testgp, testh, testgen)
+	_, err = v.New("alice", "alice:password123", 32, server)
 	if err == nil {
 		t.Logf("Verifier is %X.\nSalt is %X.\n", v.Verifier.Bytes(), v.Salt.Bytes())
 	} else {
@@ -120,8 +120,8 @@ func TestStandardHashSalt(t *testing.T) {
 		t.Error("Error: ", err)
 	}
 
-	SrpServer(testgp, H, RandomBytes)
-	_, err = tmpv.New("username", "password", 32)
+	server := new(SrpServer).SrpServer(testgp, H, RandomBytes)
+	_, err = tmpv.New("username", "password", 32, server)
 	if err != nil {
 		t.Error(err)
 	} else if len(tmpv.Verifier.Bytes()) == 0 {
@@ -150,11 +150,11 @@ func TestChallengeResponse(t *testing.T) {
 		t.Error("Error: ", err)
 	}
 
-	SrpServer(testgp, sha1hash, testgen)
+	server := new(SrpServer).SrpServer(testgp, sha1hash, testgen)
 
-	bgen = testbgen
+	server.bgen = testbgen
 
-	err = s.New(v)
+	_, err = s.New(v, server)
 
 	if err != nil {
 		t.Error("Error: ", err)

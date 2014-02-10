@@ -14,6 +14,14 @@ type SRPGroupParameters struct {
 	G big.Int
 }
 
+func (gp *SRPGroupParameters) isEmpty() bool {
+	if len(gp.G.Bytes()) > 0 && len(gp.N.Bytes()) > 0 {
+		return false
+	}
+
+	return true
+}
+
 type ErrNoPrimeAvailable int
 
 func (e ErrNoPrimeAvailable) Error() string {
