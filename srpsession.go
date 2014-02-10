@@ -9,7 +9,7 @@ import (
 type SRPSession struct {
 	// pointer to instance of server where
 	// the session is held
-	server      *SrpServer
+	config      *SRPConfig
 	i           string //username
 	s, v        big.Int //salt, verifier
 	b           big.Int //secret ephemeral value
@@ -18,27 +18,27 @@ type SRPSession struct {
 }
 
 func (s *SRPSession) ReadChallenge(jsonIA string) error {
-	if err := s.server.check_init(); err != nil {
+	if err := s.config.check_init(); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (s *SRPSession) New(v Verifier, server *SrpServer) (*SRPSession, error) {
-	if err := server.check_init(); err != nil {
+func (s *SRPSession) New(v Verifier, config *SRPConfig) (*SRPSession, error) {
+	if err := config.check_init(); err != nil {
 		return new(SRPSession), err
 	}
 
 	var err error
-	s.b, err = server.bgen(64)
+	s.b, err = config.abgen(64)
 	if err != nil {
 		return new(SRPSession), err
 	}
 
 	//Initialize SRPSession fields.
 	//s.I should be set in ReadChallenge
-	s.server = server
+	s.config = config
 	s.s = v.Salt
 	s.v = v.Verifier
 	s.bigb = s.calculate_bigb(s.b)
@@ -47,7 +47,7 @@ func (s *SRPSession) New(v Verifier, server *SrpServer) (*SRPSession, error) {
 }
 
 func (s *SRPSession) ChallengeResponse() (string, error) {
-	if err := s.server.check_init(); err != nil {
+	if err := s.config.check_init(); err != nil {
 		return "", err
 	}
 
@@ -68,21 +68,21 @@ func (s *SRPSession) ChallengeResponse() (string, error) {
 
 func (s *SRPSession) calulate_k() big.Int {
 	var Ng []byte
-	gp := s.server.gp
+	gp := s.config.gp
 
-	if s.server.pad_values {
+	if s.config.pad_values {
 		Ng = append(gp.N.Bytes(), Pad(len(gp.N.Bytes()), gp.G.Bytes())...)
 	} else {
 		Ng = append(gp.N.Bytes(), gp.G.Bytes()...)
 	}
 
-	k := s.server.h(Ng, make([]byte, 0))
+	k := s.config.h(Ng, make([]byte, 0))
 
 	return k
 }
 
 func (s *SRPSession) calculate_bigb(b big.Int) big.Int {
-	gp := s.server.gp
+	gp := s.config.gp
 
 	//calculate B = kv+g^b
 	B := s.calulate_k()

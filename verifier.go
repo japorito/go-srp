@@ -17,7 +17,7 @@ type Verifier struct {
 // preclude doing things like pbkdf2, which takes the password and salt and deals
 // with them separately. The function handed to this should be a wrapper function
 // that takes the password and salt as its 1st and 2nd argument respectively.
-func (v *Verifier) New(user, p string, slen uint, server *SrpServer) (*Verifier, error) {
+func (v *Verifier) New(user, p string, slen uint, server *SRPConfig) (*Verifier, error) {
 	//Create random salt
 	var err error
 

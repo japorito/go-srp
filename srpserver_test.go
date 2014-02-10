@@ -54,12 +54,12 @@ func sha1hash(to_hash, salt []byte) big.Int {
 }
 
 func TestCheckInit(t *testing.T) {
-	err := new(SrpServer).check_init()
+	err := new(SRPConfig).check_init()
 
 	if err == nil {
-		t.Error("Error: failed to find uninitialized SrpServer.")
+		t.Error("Error: failed to find uninitialized SRPConfig.")
 	} else {
-		t.Log("check_init() correctly found uninitialized SrpServer.")
+		t.Log("check_init() correctly found uninitialized SRPConfig.")
 	}
 
 	testgp, gperr := GetGroupParameters(1024)
@@ -68,13 +68,13 @@ func TestCheckInit(t *testing.T) {
 		t.Error("Error: ", err)
 	}
 
-	server := new(SrpServer).SrpServer(testgp, testh, testgen)
-	err = server.check_init()
+	config := new(SRPConfig).New(testgp, testh, testgen)
+	err = config.check_init()
 
 	if err != nil {
 		t.Error(err)
 	} else {
-		t.Log("check_init() correctly found SrpServer to be initialized.")
+		t.Log("check_init() correctly found SRPConfig to be initialized.")
 	}
 }
 
@@ -87,8 +87,8 @@ func TestSimpleHashSalt(t *testing.T) {
 		t.Error("Error: ", err)
 	}
 
-	server := new(SrpServer).SrpServer(testgp, testh, testgen)
-	_, err = v.New("alice", "alice:password123", 32, server)
+	config := new(SRPConfig).New(testgp, testh, testgen)
+	_, err = v.New("alice", "alice:password123", 32, config)
 	if err == nil {
 		t.Logf("Verifier is %X.\nSalt is %X.\n", v.Verifier.Bytes(), v.Salt.Bytes())
 	} else {
@@ -120,8 +120,8 @@ func TestStandardHashSalt(t *testing.T) {
 		t.Error("Error: ", err)
 	}
 
-	server := new(SrpServer).SrpServer(testgp, H, RandomBytes)
-	_, err = tmpv.New("username", "password", 32, server)
+	config := new(SRPConfig).New(testgp, H, RandomBytes)
+	_, err = tmpv.New("username", "password", 32, config)
 	if err != nil {
 		t.Error(err)
 	} else if len(tmpv.Verifier.Bytes()) == 0 {
@@ -150,11 +150,11 @@ func TestChallengeResponse(t *testing.T) {
 		t.Error("Error: ", err)
 	}
 
-	server := new(SrpServer).SrpServer(testgp, sha1hash, testgen)
+	config := new(SRPConfig).New(testgp, sha1hash, testgen)
 
-	server.bgen = testbgen
+	config.abgen = testbgen
 
-	_, err = s.New(v, server)
+	_, err = s.New(v, config)
 
 	if err != nil {
 		t.Error("Error: ", err)
